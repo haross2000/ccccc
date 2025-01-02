@@ -29,7 +29,7 @@ services:
       
       # تثبيت باقي المتطلبات
       pip install -r requirements.txt
-    startCommand: gunicorn main:server --timeout 180 --workers 1
+    startCommand: gunicorn "main:app.server" --timeout 180 --workers 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
