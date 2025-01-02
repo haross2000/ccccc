@@ -9,26 +9,6 @@ services:
       apt-get update
       apt-get install -y python3-dev build-essential wget
 
-      # إنشاء setup.py
-      cat > setup.py << 'EOL'
-      from setuptools import setup, find_packages
-
-      setup(
-          name="crypto_analysis",
-          version="0.1",
-          packages=find_packages(),
-          install_requires=[
-              "numpy==1.26.2",
-              "pandas",
-              "dash",
-              "plotly",
-              "dash-bootstrap-components",
-              "python-dotenv",
-              "ta"
-          ],
-      )
-      EOL
-
       # تثبيت numpy أولاً
       pip install numpy==1.26.2
 
@@ -47,24 +27,63 @@ services:
       export TA_INCLUDE_PATH=/usr/include
       pip install --no-cache-dir ta-lib==0.4.28
       
-      # تثبيت المشروع في وضع التطوير
-      pip install -e .
+      # تثبيت باقي المتطلبات
+      pip install -r requirements.txt
+
+      # إنشاء ملف __init__.py في مجلد utils
+      echo '"""
+      Cryptocurrency Analysis Utilities
       
-      # عرض الحزم المثبتة
-      pip list
-      
+      This package contains various utilities for cryptocurrency analysis:
+      - Data collection
+      - Technical analysis
+      - Pattern recognition
+      - Market analysis
+      - Decision making
+      - Risk management
+      """
+
+      from .data_collector import DataCollector
+      from .technical_analyzer import TechnicalAnalyzer
+      from .pattern_analyzer import PatternAnalyzer
+      from .market_analyzer import MarketAnalyzer
+      from .decision_maker import DecisionMaker
+      from .risk_management import RiskManager
+
+      __all__ = [
+          "DataCollector",
+          "TechnicalAnalyzer",
+          "PatternAnalyzer",
+          "MarketAnalyzer",
+          "DecisionMaker",
+          "RiskManager"
+      ]' > utils/__init__.py
+
+      # نسخ الملفات إلى المجلد الصحيح
+      mkdir -p /app
+      cp -r . /app/
+      cd /app
+
       # عرض محتويات المجلد
-      ls -la
+      echo "=== محتويات المجلد /app ==="
+      ls -la /app
+      echo "=== محتويات مجلد utils ==="
+      ls -la /app/utils
+      echo "=== محتوى ملف utils/__init__.py ==="
+      cat /app/utils/__init__.py
     startCommand: |
-      cd /opt/render/project/src
+      cd /app
       
-      # عرض المسار الحالي ومحتويات المجلد
-      pwd
-      ls -la
-      python -c "import sys; print(sys.path)"
+      # إضافة المسار إلى PYTHONPATH
+      export PYTHONPATH=/app:$PYTHONPATH
+      
+      # عرض المسار وقائمة sys.path
+      echo "Current directory: $(pwd)"
+      python -c "import sys; print('Python path:', sys.path)"
       
       # تشغيل التطبيق
-      PYTHONPATH=/opt/render/project/src gunicorn "main:app.server" --timeout 180 --workers 1 --log-level debug
+      python -c "import os; print('Files in current directory:', os.listdir('.')); print('Files in utils:', os.listdir('utils'))" || true
+      gunicorn "main:app.server" --timeout 180 --workers 1 --log-level debug
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -75,4 +94,4 @@ services:
       - key: LD_LIBRARY_PATH
         value: /usr/lib
       - key: PYTHONPATH
-        value: /opt/render/project/src
+        value: /app
