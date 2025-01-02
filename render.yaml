@@ -2,26 +2,39 @@ services:
   - type: web
     name: crypto-analysis
     env: python
+    region: frankfurt  # منطقة السيرفر
+    plan: free  # نوع الخطة
     buildCommand: |
-      # تثبيت المكتبات الأساسية المطلوبة
+      # تثبيت المكتبات الأساسية
       apt-get update
-      apt-get install -y build-essential wget
+      apt-get install -y python3-dev build-essential wget
 
       # تحميل وتثبيت TA-Lib
       wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-      tar -xvf ta-lib-0.4.0-src.tar.gz
+      tar -xzf ta-lib-0.4.0-src.tar.gz
       cd ta-lib/
       ./configure --prefix=/usr
       make
       make install
       cd ..
-      rm -rf ta-lib-0.4.0-src.tar.gz ta-lib/
+      rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
       
-      # تثبيت المتطلبات
+      # تثبيت TA-Lib Python
+      pip install numpy
+      pip install --index-url https://pypi.anaconda.org/ranaroussi/simple ta-lib
+      
+      # تثبيت باقي المتطلبات
       pip install -r requirements.txt
-    startCommand: gunicorn main:server --timeout 120
+    startCommand: gunicorn main:server --timeout 180 --workers 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: PYTHONUNBUFFERED
+        value: "true"
       - key: LD_LIBRARY_PATH
         value: /usr/lib
+    healthCheckPath: /
+    healthCheckTimeout: 100
+    autoDeploy: true
+    domains:
+      - crypto-analysis.onrender.com
