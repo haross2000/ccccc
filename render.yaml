@@ -30,31 +30,29 @@ services:
       # تثبيت باقي المتطلبات
       pip install -r requirements.txt
 
-      # إنشاء ملف wsgi.py
-      echo 'import os
-import sys
-
-# إضافة المجلد الحالي إلى مسار Python
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, current_dir)
-
-from main import app
-
-server = app.server' > wsgi.py
-
-      # عرض محتويات المجلد
-      echo "=== محتويات المجلد الحالي ==="
-      ls -la
-    startCommand: |
-      # إضافة المسار إلى PYTHONPATH
-      export PYTHONPATH=/opt/render/project/src
+      # نسخ ملفات utils إلى المجلد الرئيسي
+      cp utils/*.py .
       
-      # عرض المسار وقائمة sys.path
-      echo "Current directory: $(pwd)"
-      python -c "import sys; print('Python path:', sys.path)"
+      # تعديل الاستيرادات في main.py
+      sed -i 's/from utils\./from /g' main.py
+      
+      # عرض محتويات المجلد للتأكد
+      echo "=== محتويات المجلد ==="
+      ls -la
+      
+      # عرض التغييرات في main.py
+      echo "=== محتوى main.py ==="
+      head -n 20 main.py
+    startCommand: |
+      cd /opt/render/project/src
+      
+      # عرض المجلد الحالي ومحتوياته
+      echo "=== المجلد الحالي ==="
+      pwd
+      ls -la
       
       # تشغيل التطبيق
-      cd /opt/render/project/src && gunicorn wsgi:server --timeout 180 --workers 1 --log-level debug
+      gunicorn "main:app.server" --timeout 180 --workers 1 --log-level debug
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
