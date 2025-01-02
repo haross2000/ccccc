@@ -30,28 +30,25 @@ services:
       # تثبيت باقي المتطلبات
       pip install -r requirements.txt
 
-      # إنشاء __init__.py في مجلد utils إذا لم يكن موجوداً
-      touch utils/__init__.py
-
-      # نسخ الملفات إلى المسار الصحيح
-      cp -r utils /opt/render/project/src/
+      # إنشاء بنية المجلدات
+      mkdir -p /opt/render/project/src/app
+      
+      # نقل الملفات إلى المجلد الصحيح
+      cp -r * /opt/render/project/src/app/
+      cd /opt/render/project/src/app
       
       # عرض هيكل المجلد
       echo "=== محتويات المجلد الحالي ==="
-      ls -R /opt/render/project/src
+      ls -R
     startCommand: |
-      # إضافة المسارات إلى PYTHONPATH
-      export PYTHONPATH="/opt/render/project/src:/opt/render/project/src/utils:${PYTHONPATH}"
+      cd /opt/render/project/src/app
       
-      # عرض PYTHONPATH
-      echo "PYTHONPATH: $PYTHONPATH"
-      
-      # التأكد من وجود المجلدات
-      ls -la /opt/render/project/src
-      ls -la /opt/render/project/src/utils
+      # عرض المسار الحالي والمحتويات
+      pwd
+      ls -la
       
       # تشغيل التطبيق
-      cd /opt/render/project/src && python -c "import sys; print(sys.path)" && gunicorn main:app.server --timeout 180 --workers 1 --log-level debug
+      gunicorn --chdir /opt/render/project/src/app "main:app.server" --timeout 180 --workers 1 --log-level debug
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -62,4 +59,4 @@ services:
       - key: LD_LIBRARY_PATH
         value: /usr/lib
       - key: PYTHONPATH
-        value: /opt/render/project/src:/opt/render/project/src/utils
+        value: /opt/render/project/src/app
