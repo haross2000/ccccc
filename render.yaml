@@ -8,23 +8,23 @@ services:
       bash miniconda.sh -b -p $HOME/miniconda
       export PATH="$HOME/miniconda/bin:$PATH"
       
-      # تهيئة conda وإضافة القنوات
-      conda init bash
-      source ~/.bashrc
-      conda config --add channels conda-forge
+      # تهيئة conda
+      $HOME/miniconda/bin/conda init bash
+      source $HOME/.bashrc
+      $HOME/miniconda/bin/conda config --add channels conda-forge
       
       # إنشاء وتفعيل بيئة conda
-      conda create -n myenv python=3.11 -y
-      conda activate myenv
+      $HOME/miniconda/bin/conda create -n myenv python=3.11 -y
+      source $HOME/miniconda/bin/activate myenv
       
       # تثبيت TA-Lib وباقي المتطلبات
-      conda install -c conda-forge ta-lib -y
+      $HOME/miniconda/bin/conda install -c conda-forge ta-lib -y
       pip install -r requirements.txt
     startCommand: |
       source $HOME/miniconda/bin/activate myenv
-      gunicorn main:server
+      gunicorn main:server --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: CONDA_HOME
-        value: $HOME/miniconda
+      - key: PATH
+        value: $HOME/miniconda/bin:$PATH
