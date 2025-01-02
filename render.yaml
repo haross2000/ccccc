@@ -3,28 +3,25 @@ services:
     name: crypto-analysis
     env: python
     buildCommand: |
-      # تثبيت Miniconda
-      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-      bash miniconda.sh -b -p $HOME/miniconda
-      export PATH="$HOME/miniconda/bin:$PATH"
+      # تثبيت المكتبات الأساسية المطلوبة
+      apt-get update
+      apt-get install -y build-essential wget
+
+      # تحميل وتثبيت TA-Lib
+      wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+      tar -xvf ta-lib-0.4.0-src.tar.gz
+      cd ta-lib/
+      ./configure --prefix=/usr
+      make
+      make install
+      cd ..
+      rm -rf ta-lib-0.4.0-src.tar.gz ta-lib/
       
-      # تهيئة conda
-      $HOME/miniconda/bin/conda init bash
-      source $HOME/.bashrc
-      $HOME/miniconda/bin/conda config --add channels conda-forge
-      
-      # إنشاء وتفعيل بيئة conda
-      $HOME/miniconda/bin/conda create -n myenv python=3.11 -y
-      source $HOME/miniconda/bin/activate myenv
-      
-      # تثبيت TA-Lib وباقي المتطلبات
-      $HOME/miniconda/bin/conda install -c conda-forge ta-lib -y
+      # تثبيت المتطلبات
       pip install -r requirements.txt
-    startCommand: |
-      source $HOME/miniconda/bin/activate myenv
-      gunicorn main:server --timeout 120
+    startCommand: gunicorn main:server --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: PATH
-        value: $HOME/miniconda/bin:$PATH
+      - key: LD_LIBRARY_PATH
+        value: /usr/lib
