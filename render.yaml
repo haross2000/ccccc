@@ -29,9 +29,19 @@ services:
       
       # تثبيت باقي المتطلبات
       pip install -r requirements.txt
+
+      # عرض هيكل المجلد
+      echo "=== محتويات المجلد الحالي ==="
+      ls -R
     startCommand: |
-      export PYTHONPATH=/opt/render/project/src:$PYTHONPATH
-      gunicorn "main:app.server" --timeout 180 --workers 1
+      # التأكد من وجود المجلدات والملفات
+      echo "=== محتويات المجلد الرئيسي ==="
+      ls -la /opt/render/project/src
+      echo "=== محتويات مجلد utils ==="
+      ls -la /opt/render/project/src/utils
+      
+      # تشغيل التطبيق
+      cd /opt/render/project/src && gunicorn main:app.server --timeout 180 --workers 1 --log-level debug
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -43,6 +53,3 @@ services:
         value: /usr/lib
       - key: PYTHONPATH
         value: /opt/render/project/src
-    healthCheckPath: /
-    healthCheckTimeout: 100
-    autoDeploy: true
