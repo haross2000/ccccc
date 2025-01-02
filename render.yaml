@@ -30,60 +30,31 @@ services:
       # تثبيت باقي المتطلبات
       pip install -r requirements.txt
 
-      # إنشاء ملف __init__.py في مجلد utils
-      echo '"""
-      Cryptocurrency Analysis Utilities
-      
-      This package contains various utilities for cryptocurrency analysis:
-      - Data collection
-      - Technical analysis
-      - Pattern recognition
-      - Market analysis
-      - Decision making
-      - Risk management
-      """
+      # إنشاء ملف wsgi.py
+      echo 'import os
+import sys
 
-      from .data_collector import DataCollector
-      from .technical_analyzer import TechnicalAnalyzer
-      from .pattern_analyzer import PatternAnalyzer
-      from .market_analyzer import MarketAnalyzer
-      from .decision_maker import DecisionMaker
-      from .risk_management import RiskManager
+# إضافة المجلد الحالي إلى مسار Python
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 
-      __all__ = [
-          "DataCollector",
-          "TechnicalAnalyzer",
-          "PatternAnalyzer",
-          "MarketAnalyzer",
-          "DecisionMaker",
-          "RiskManager"
-      ]' > utils/__init__.py
+from main import app
 
-      # نسخ الملفات إلى المجلد الصحيح
-      mkdir -p /app
-      cp -r . /app/
-      cd /app
+server = app.server' > wsgi.py
 
       # عرض محتويات المجلد
-      echo "=== محتويات المجلد /app ==="
-      ls -la /app
-      echo "=== محتويات مجلد utils ==="
-      ls -la /app/utils
-      echo "=== محتوى ملف utils/__init__.py ==="
-      cat /app/utils/__init__.py
+      echo "=== محتويات المجلد الحالي ==="
+      ls -la
     startCommand: |
-      cd /app
-      
       # إضافة المسار إلى PYTHONPATH
-      export PYTHONPATH=/app:$PYTHONPATH
+      export PYTHONPATH=/opt/render/project/src
       
       # عرض المسار وقائمة sys.path
       echo "Current directory: $(pwd)"
       python -c "import sys; print('Python path:', sys.path)"
       
       # تشغيل التطبيق
-      python -c "import os; print('Files in current directory:', os.listdir('.')); print('Files in utils:', os.listdir('utils'))" || true
-      gunicorn "main:app.server" --timeout 180 --workers 1 --log-level debug
+      cd /opt/render/project/src && gunicorn wsgi:server --timeout 180 --workers 1 --log-level debug
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -94,4 +65,4 @@ services:
       - key: LD_LIBRARY_PATH
         value: /usr/lib
       - key: PYTHONPATH
-        value: /app
+        value: /opt/render/project/src
