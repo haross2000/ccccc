@@ -9,6 +9,26 @@ services:
       apt-get update
       apt-get install -y python3-dev build-essential wget
 
+      # إنشاء setup.py
+      cat > setup.py << 'EOL'
+      from setuptools import setup, find_packages
+
+      setup(
+          name="crypto_analysis",
+          version="0.1",
+          packages=find_packages(),
+          install_requires=[
+              "numpy==1.26.2",
+              "pandas",
+              "dash",
+              "plotly",
+              "dash-bootstrap-components",
+              "python-dotenv",
+              "ta"
+          ],
+      )
+      EOL
+
       # تثبيت numpy أولاً
       pip install numpy==1.26.2
 
@@ -27,28 +47,24 @@ services:
       export TA_INCLUDE_PATH=/usr/include
       pip install --no-cache-dir ta-lib==0.4.28
       
-      # تثبيت باقي المتطلبات
-      pip install -r requirements.txt
-
-      # إنشاء بنية المجلدات
-      mkdir -p /opt/render/project/src/app
+      # تثبيت المشروع في وضع التطوير
+      pip install -e .
       
-      # نقل الملفات إلى المجلد الصحيح
-      cp -r * /opt/render/project/src/app/
-      cd /opt/render/project/src/app
+      # عرض الحزم المثبتة
+      pip list
       
-      # عرض هيكل المجلد
-      echo "=== محتويات المجلد الحالي ==="
-      ls -R
+      # عرض محتويات المجلد
+      ls -la
     startCommand: |
-      cd /opt/render/project/src/app
+      cd /opt/render/project/src
       
-      # عرض المسار الحالي والمحتويات
+      # عرض المسار الحالي ومحتويات المجلد
       pwd
       ls -la
+      python -c "import sys; print(sys.path)"
       
       # تشغيل التطبيق
-      gunicorn --chdir /opt/render/project/src/app "main:app.server" --timeout 180 --workers 1 --log-level debug
+      PYTHONPATH=/opt/render/project/src gunicorn "main:app.server" --timeout 180 --workers 1 --log-level debug
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -59,4 +75,4 @@ services:
       - key: LD_LIBRARY_PATH
         value: /usr/lib
       - key: PYTHONPATH
-        value: /opt/render/project/src/app
+        value: /opt/render/project/src
